@@ -1,0 +1,14 @@
+li.activity.programcourse span.inplaceeditable a.quickeditlink {
+  display: none;
+}
+#page-mod-programcourse-mod .popover {
+  max-width: 350px;
+}
+#fitem_id_courseid .dropdown-menu .inner.show {
+  padding-bottom: 0;
+  padding-top: 0;
+  padding-left: 0;
+}
+#fitem_id_courseid .dropdown-menu .dropdown-item {
+  background: none;
+}
