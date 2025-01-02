@@ -46,3 +46,4 @@ $string['completionall'] = 'Toutes les activités des session à associer liés 
 $string['completionall_help'] = 'Ne peut pas être défini en même temps que la condition "au moins une"';
 $string['initmod'] = 'Initialement, ce module {$a->fullname} pointait sur l\'id {$a->id} de la plateforme {$a->platform}.';
 $string['completion'] = 'Completion';
+$string['return_parcours'] = 'Retour au parcours';

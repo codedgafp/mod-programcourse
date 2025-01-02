@@ -388,4 +388,40 @@ class database_interface {
     public function get_role_by_name(string $rolename): false|\stdClass {
         return $this->db->get_record('role', ['shortname' => $rolename]);
     }
+
+
+    /**
+     * Check if exists a program course by courseid.
+     *
+     * @param int $courseid
+     * @return false|\stdClass
+     * @throws \dml_exception
+     */
+    public function is_programcourse_by_courseid(int $courseid): bool {
+        return $this->db->record_exists(self::DEFAULT_MODULE_NAME, ['courseid' => $courseid]);
+    }
+
+    /**
+     * Check if the user is enrolled in the program course by program method.
+     *
+     * @param int $userid The ID of the user.
+     * @param int $currentCourseId The ID of the course of the session.
+     * @param int $previouscourseId The ID of the previous course .
+     * @return bool True if the user is enrolled in the program course, false otherwise.
+     * @throws \dml_exception If a database error occurs.
+     */
+    public function is_user_enrolled_in_programcourse(int $userid, int $currentCourseId,int $previouscourseId): bool {
+        $enrolment = $this->db->get_records_sql('
+            SELECT  DISTINCT pc.id
+            FROM {user_enrolments} ue
+            JOIN {enrol} e ON ue.enrolid = e.id
+            JOIN {programcourse} pc ON e.courseid = pc.courseid
+            WHERE ue.userid = :userid 
+            AND e.courseid = :courseid
+            AND e.enrol = :enrolmethod 
+            AND pc.course = :programcourseid
+        ', ['userid' => $userid, 'courseid' => $currentCourseId, 'enrolmethod' => 'program', 'programcourseid' => $previouscourseId]);
+        return !empty($enrolment);
+    }
+
 }

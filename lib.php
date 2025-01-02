@@ -341,3 +341,11 @@ function mod_programcourse_get_completion_active_rule_descriptions($cm) {
 
     return $descriptions;
 }
+
+/**
+ * Extend the course navigation with the programcourse items.
+ */
+function mod_programcourse_extend_navigation_course() {
+    global $PAGE;
+    $PAGE->requires->js_call_amd('mod_programcourse/return_button_programcourse', 'init');
+}

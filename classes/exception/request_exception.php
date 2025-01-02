@@ -1,3 +1,4 @@
+
 <?php
 // This file is part of Moodle - http://moodle.org/
 //
@@ -13,26 +14,25 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * Version file.
+ * logger.
  *
- * @package    mod_programcourse
- * @copyright  2023 Edunao SAS (contact@edunao.com)
- * @author     Pierre FACQ <pierre.facq@edunao.com>
+ * @package     mod_programcourse
+ * @copyright  CGI 2024 (https://www.cgi.com/)
+ * @author     Picard Quentin <quentin.picard@cgi.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2025012100;
-$plugin->requires  = 2022112800;
-$plugin->component = 'mod_programcourse';
-$plugin->dependencies = [
-    'enrol_program' => 2024040903,
-];
-
-//Navigation callback
-$plugin->callbacks = [
-    'extend_navigation_course' => 'mod_programcourse_extend_navigation_course',
-];
+class request_exception extends moodle_exception
+{
+    private int $requestcode;
+    public function __construct(string $errorcode, int $requestcode = 500)
+    {
+        parent::__construct($errorcode);
+        $this->requestcode = $requestcode;
+    }
+    public function getRequestcode(): ?int
+    {
+        return $this->requestcode;
+    }
+}
