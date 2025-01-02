@@ -23,18 +23,18 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Module';
-$string['pluginadministration'] = 'Administration de l\'activté module';
-$string['privacy:metadata'] = 'Le plugin d\'activité module ne stocke aucune donnée personnelle.';
-$string['programcourse:addinstance'] = 'Ajouter un nouveau module.';
-$string['programcourse:view'] = 'Voir module';
-$string['modulename'] = 'Module';
+$string['pluginname'] = 'Module de parcours';
+$string['pluginadministration'] = 'Administration de l\'activté module de parcours';
+$string['privacy:metadata'] = 'Le plugin d\'activité module de parcours ne stocke aucune donnée personnelle.';
+$string['programcourse:addinstance'] = 'Ajouter un nouveau module de parcours.';
+$string['programcourse:view'] = 'Voir module de parcours';
+$string['modulename'] = 'Module de parcours';
 $string['modulename_help']
     = 'Cette activité permet d\'intégrer une formation comme un "module" dans votre parcours. Vous ne pouvez insérer comme module que des formations où vous êtes formateur ou des formations publiées dans un catalogue en libre accès.';
 $string['modulename_link'] = 'mod/programcourse/view';
-$string['modulenameplural'] = 'Modules';
-$string['search:activity'] = 'Module';
-$string['courselist'] = 'Cours';
+$string['modulenameplural'] = 'Modules de parcours';
+$string['search:activity'] = 'Module de parcours';
+$string['courselist'] = 'Session à associer';
 $string['courselist_help'] = 'Les formations disponibles dans cette liste sont :
 <ul>
 <li>les formations dans lesquelles vous êtes formateur;</li>
@@ -42,7 +42,7 @@ $string['courselist_help'] = 'Les formations disponibles dans cette liste sont :
 </li>
 </ul>
 ';
-$string['completionall'] = 'Toutes les activités des cours liés sont terminées';
+$string['completionall'] = 'Toutes les activités des session à associer liés sont terminées';
 $string['completionall_help'] = 'Ne peut pas être défini en même temps que la condition "au moins une"';
 $string['initmod'] = 'Initialement, ce module {$a->fullname} pointait sur l\'id {$a->id} de la plateforme {$a->platform}.';
 $string['completion'] = 'Completion';
