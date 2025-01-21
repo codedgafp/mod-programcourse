@@ -178,4 +178,20 @@ class mod_programcourse_mod_form extends moodleform_mod {
 
         return $errors;
     }
+
+    /**
+     * Allows module to modify data returned by get_moduleinfo_data() or prepare_new_moduleinfo_data() before calling set_data()
+     * This method is also called in the bulk activity completion form.
+     *
+     * Only available on moodleform_mod.
+     *
+     * @param array $default_values passed by reference
+     */
+    function data_preprocessing(&$default_values){
+        //Set default completion tracking to automatic
+        if (isset($default_values['completion'])) {
+            $default_values['completion'] = COMPLETION_TRACKING_AUTOMATIC;
+        }       
+        
+    }
 }
