@@ -42,7 +42,7 @@ $string['courselist_help'] = 'Les formations disponibles dans cette liste sont :
 </li>
 </ul>
 ';
-$string['completionall'] = 'Toutes les activités des session à associer liés sont terminées';
+$string['completionall'] = 'Toutes les activités des cours liés sont terminées';
 $string['completionall_help'] = 'Ne peut pas être défini en même temps que la condition "au moins une"';
 $string['initmod'] = 'Initialement, ce module {$a->fullname} pointait sur l\'id {$a->id} de la plateforme {$a->platform}.';
 $string['completion'] = 'Completion';
