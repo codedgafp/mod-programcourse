@@ -181,12 +181,39 @@ class database_interface {
 
         // Get course when user is formateur.
         $availablecourses = $this->db->get_records_sql("
-
-                    SELECT  DISTINCT c.id
+                    SELECT DISTINCT c.id
                     FROM
                         {course} c
                     JOIN
-                        {session} s ON s.courseshortname = c.shortname AND s.status =  'inprogress'
+                        {session} s ON s.courseshortname = c.shortname AND s.status = 'inprogress'
+                    JOIN
+                        {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
+                                                            AND ccs_main_entity.name = 'Sessions' AND ccs_main_entity.visible = 1
+                    LEFT JOIN
+                        {session_sharing} ss ON ss.sessionid = s.id
+                    JOIN
+                        {user} u ON u.id = :userid
+                    JOIN
+                        {user_info_data} uid ON uid.userid = u.id
+                    JOIN
+                        {user_info_field} uif ON uif.id = uid.fieldid AND uif.shortname = 'mainentity'
+                    JOIN
+                        {course_categories} ccu_main_entity ON ccu_main_entity.name = uid.data AND ccu_main_entity.parent = 0
+                    JOIN
+                        {context} con ON con.instanceid = c.id AND con.contextlevel = :contextlevel
+                    WHERE
+                        (   s.opento = '".session::OPEN_TO_ALL."'  
+                        OR
+                            (s.opento = '".session::OPEN_TO_CURRENT_MAIN_ENTITY."' AND ccu_main_entity.id = ccs_main_entity.parent )
+                            OR
+                            (s.opento = '".session::OPEN_TO_OTHER_ENTITY."' AND (ccu_main_entity.id = ccs_main_entity.parent OR ccu_main_entity.id = ss.coursecategoryid))
+                        )
+                    UNION
+                    SELECT DISTINCT c.id
+                    FROM
+                        {course} c
+                    JOIN
+                        {session} s ON s.courseshortname = c.shortname AND s.status = 'inprogress'
                     JOIN
                         {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
                                                             AND ccs_main_entity.name = 'Sessions' AND ccs_main_entity.visible = 1
@@ -195,7 +222,7 @@ class database_interface {
                     JOIN
                         {enrol} e ON e.courseid = c.id
                     JOIN
-                        {user_enrolments} ue ON ue.enrolid = e.id AND ue.userid = :userid
+                        {user_enrolments} ue ON ue.enrolid = e.id AND ue.userid = :user_id
                     JOIN
                         {user_info_data} uid ON uid.userid = ue.userid
                     JOIN
@@ -203,23 +230,14 @@ class database_interface {
                     JOIN
                         {course_categories} ccu_main_entity ON ccu_main_entity.name = uid.data AND ccu_main_entity.parent = 0
                     JOIN
-                        {context} con ON con.instanceid = c.id  AND con.contextlevel = :contextlevel
+                        {context} con ON con.instanceid = c.id AND con.contextlevel = :context_level
                     JOIN
-                        {role_assignments} ra  ON ra.contextid = con.id
-                    LEFT JOIN
-                        {role_capabilities} rc ON rc.roleid = ra.roleid AND rc.capability =  :capability
-                    WHERE 
-                                            
-                            (   s.opento = '".session::OPEN_TO_ALL."' 
-                                OR
-                                    (s.opento = '".session::OPEN_TO_CURRENT_MAIN_ENTITY."' AND ccu_main_entity.id = ccs_main_entity.parent )
-                                    OR
-                                    (s.opento = '".session::OPEN_TO_OTHER_ENTITY."'  AND (ccu_main_entity.id = ccs_main_entity.parent OR ccu_main_entity.id = ss.coursecategoryid))
-                                )                  
-                            ;
-               
-    ", ['contextlevel' => CONTEXT_COURSE, 'userid' => $USER->id,'capability' => 'moodle/course:manageactivities']);
-
+                        {role_assignments} ra ON ra.contextid = con.id
+                    JOIN
+                        {role_capabilities} rc ON rc.roleid = ra.roleid AND rc.capability =  :capability   ;
+                    
+                    ", ['contextlevel' => CONTEXT_COURSE, 'context_level' => CONTEXT_COURSE,'userid' => $USER->id,'user_id' => $USER->id,'capability' => 'moodle/course:manageactivities']);
+                   
         // Ignore self course.
         $courseecetpion[] = $COURSE->id;
 
