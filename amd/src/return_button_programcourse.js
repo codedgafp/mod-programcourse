@@ -21,8 +21,10 @@ define([
             var lastVisitedUrl = sessionStorage.getItem('lastVisitedUrl');
 
             if (lastVisitedUrl && lastVisitedUrl.includes('/course/view.php?id=')) {
-                var previouscourseId = lastVisitedUrl.split('/course/view.php?id=')[1];
-                var currentCourseId = window.location.search.split('id=')[1];
+                var previousUrlParams = new URLSearchParams(new URL(lastVisitedUrl).search);
+                var previouscourseId =  previousUrlParams.get('id');
+                var currentUrlParams = new URLSearchParams(window.location.search);
+                var currentCourseId = currentUrlParams.get('id');
                 $.ajax({
                     method: 'GET',
                     url: M.cfg.wwwroot + '/mod/programcourse/ajax/ajax.php',
