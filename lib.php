@@ -347,5 +347,8 @@ function mod_programcourse_get_completion_active_rule_descriptions($cm) {
  */
 function mod_programcourse_extend_navigation_course() {
     global $PAGE;
+    $PAGE->requires->strings_for_js([
+        'return_parcours'
+    ], 'mod_programcourse');
     $PAGE->requires->js_call_amd('mod_programcourse/return_button_programcourse', 'init');
 }
