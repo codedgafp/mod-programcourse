@@ -43,11 +43,15 @@ class programcourse_controller extends controller_base {
      * @throws \moodle_exception
      */
    public function get_eligibility_for_programcourse() {
+        global $SESSION;
+
         $currentCourseId = $this->get_param('currentCourseId', PARAM_INT,null);
-        $previouscourseId = $this->get_param('previouscourseId', PARAM_INT, null);
-        if($currentCourseId != null && $previouscourseId != null){
-             $isEligible = programcourse_api::is_eligible_for_programcourse($currentCourseId, $previouscourseId);
-             return $this->success( ['message' => $isEligible] );
+        $programCourseId = $SESSION->program[$currentCourseId]["courseid"];
+
+        if($currentCourseId != null ){
+            $isEligible = programcourse_api::is_programcourse_by_courseid($currentCourseId);
+            $returnId = $isEligible ? $programCourseId : null;
+            return $this->success( ['message' => $isEligible,'redirectid' => $returnId] );
         }else {
             throw new \moodle_exception('invalidparams', 'Invalid params');
         }      

@@ -42,23 +42,14 @@ class programcourse_api {
 
 
         /**
-         * Checks if the current user is eligible for a program course.
+         * Check if the course is a program course
          *
-         * This function determines if the current user is eligible for a program course
-         * by checking if the course is a program course and if the user is enrolled in it.
-         *
-         * @global object $USER The global user object.
          * @param int $currentCourseId The ID of the course of the session .
-         * @param int $previouscourseId The ID of the previous course.
-         * @return bool True if the user is eligible for the program course, false otherwise.
+         * @return bool True if the course is a program course , false otherwise
          */
-        public static function is_eligible_for_programcourse($currentCourseId, $previouscourseId): bool  {
-
-            global $USER;
-
+        public static function is_programcourse_by_courseid($courseId): bool  {
             $dbInterface = \mod_programcourse\database_interface::get_instance();
-
-            return $dbInterface->is_programcourse_by_courseid($currentCourseId) && $dbInterface->is_user_enrolled_in_programcourse($USER->id, $currentCourseId, $previouscourseId);
+            return $dbInterface->is_programcourse_by_courseid($courseId) ;
         }
 
 }

@@ -355,4 +355,39 @@ class programcourse_testcase extends advanced_testcase {
 
     }
 
+    /**
+     * Test is_programcourse_by_courseid function
+     */
+    public function test_is_programcourse_by_courseid() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+        self::setAdminUser();
+
+        // Create a course.
+        $course1 = self::getDataGenerator()->create_course();
+        // Create a course.
+        $course2 = self::getDataGenerator()->create_course();
+        // Insert a record into the programcourse table.
+        $programcourse = new stdClass();
+        $programcourse->course = $course1->id;
+        $programcourse->courseid = $course2->id;
+        $programcourse->intro = "intro";
+        $programcourse->timemodified = time();
+        $DB->insert_record('programcourse', $programcourse);
+
+        // Check if the course is a program course.
+        $dbi = \mod_programcourse\database_interface::get_instance();
+        $isprogramcourse = $dbi->is_programcourse_by_courseid($course2->id);
+
+        self::assertTrue($isprogramcourse);
+
+        // Check with a non-program course.
+        $nonprogramcourse = self::getDataGenerator()->create_course();
+        $isprogramcourse = $dbi->is_programcourse_by_courseid($nonprogramcourse->id);
+
+        self::assertFalse($isprogramcourse);
+    }
+
 }

@@ -11,20 +11,22 @@ define([
          * @return void
          */
         init: function () {
-         
             $(document).ready(function() {
                 this.setProgramcourseButton();
             }.bind(this));
         },
 
         setProgramcourseButton: function () {
-            var lastVisitedUrl = sessionStorage.getItem('lastVisitedUrl');
-
-            if (lastVisitedUrl && lastVisitedUrl.includes('/course/view.php?id=')) {
-                var previousUrlParams = new URLSearchParams(new URL(lastVisitedUrl).search);
-                var previouscourseId =  previousUrlParams.get('id');
+            
+        var currentUrl = window.location.href;
+        if (document.referrer === '' || document.referrer === currentUrl) {
+            return;
+        }
+            if(currentUrl.includes('/course/view.php?id=') ) {
                 var currentUrlParams = new URLSearchParams(window.location.search);
                 var currentCourseId = currentUrlParams.get('id');
+                     
+                
                 $.ajax({
                     method: 'GET',
                     url: M.cfg.wwwroot + '/mod/programcourse/ajax/ajax.php',
@@ -32,22 +34,23 @@ define([
                         controller: 'programcourse',
                         action: 'get_eligibility_for_programcourse',
                         format: 'json',
-                        currentCourseId: currentCourseId,
-                        previouscourseId: previouscourseId
+                        currentCourseId: currentCourseId
                     },
                     error: function () {
                         console.log('error');
                     }
                 }).done(function (response) {
+                   
                     response = JSON.parse(response);
-                    if(response.message === true) {
+                    
+                    if(response.message === true && response.redirectid != null) {
                     const courseHeader = document.getElementById('course-header');
                     const button = document.createElement('button');
                     button.setAttribute('aria-label', M.util.get_string('return_parcours', 'mod_programcourse'));
                     button.innerHTML = M.util.get_string('return_parcours', 'mod_programcourse');
                     button.classList.add('btn', 'btn-secondary', 'btn-lg');
                     button.onclick = function () {
-                        window.location.href = lastVisitedUrl;
+                        window.location.href = M.cfg.wwwroot + '/course/view.php?id=' + response.redirectid;
                     };
                     courseHeader.insertBefore(button, courseHeader.firstChild);
                 }});
