@@ -50,24 +50,10 @@ class restore_programcourse_activity_structure_step extends restore_activity_str
 
         $data = (object)$data;
         $data->course = $this->get_courseid();
-        $data->courseid = 0;
-        $data->intro = $data->hiddenintro;
-
         // Insert the programcourse activity instance.
         $newitemid = $dbi->add_programcourse_instance($data);
         // Apply activity instance.
         $this->apply_activity_instance($newitemid);
     }
 
-    /**
-     * Hook to execute assignment upgrade after restore.
-     */
-    protected function after_restore() {
-        global $DB;
-        $programcourseid = $this->get_new_parentid('programcourse');
-        $programcourse = $DB->get_record('programcourse', ['id' => $programcourseid]);
-
-        $programcourse->name .= ' (à configurer)';
-        $DB->update_record('programcourse', $programcourse);
-    }
 }

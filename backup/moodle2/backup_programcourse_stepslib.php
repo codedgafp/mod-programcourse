@@ -33,11 +33,11 @@ class backup_programcourse_activity_structure_step extends backup_activity_struc
         // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
 
-        // Define each element separated. Do not backup the courseid.
+        // Define each element separated.
         $programcourse = new backup_nested_element(
             'programcourse',
             ['id'],
-            ['name', 'intro', 'introformat', 'completionall', 'timemodified', 'site', 'hiddenintro']
+            ['name', 'intro', 'courseid', 'introformat', 'completionall', 'timemodified', 'site', 'hiddenintro']
         );
 
         // Define sources.

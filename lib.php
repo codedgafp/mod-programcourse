@@ -41,11 +41,7 @@ function programcourse_add_instance($programcourse, $mform = null) {
     $programcourse->timemodified = time();
 
     $site = get_site();
-    $programcourse->hiddenintro = $programcourse->intro . '<p>' . get_string(
-            'initmod',
-            'mod_programcourse',
-            ['fullname' => $course->fullname, 'id' => $course->id, 'platform' => $site->fullname]
-        ) . '</p>';
+    $programcourse->hiddenintro = $programcourse->intro;
 
     $programcourse->id = $dbi->add_programcourse_instance($programcourse);
 
@@ -114,11 +110,7 @@ function programcourse_update_instance($module) {
         $programcourse->intro = $module->intro;
 
         $site = get_site();
-        $programcourse->hiddenintro = $programcourse->intro . '<p>' . get_string(
-                'initmod',
-                'mod_programcourse',
-                ['fullname' => $course->fullname, 'id' => $course->id, 'platform' => $site->fullname]
-            ) . '</p>';
+        $programcourse->hiddenintro = $programcourse->intro;
 
         $programcourse->timemodified = time();
 
