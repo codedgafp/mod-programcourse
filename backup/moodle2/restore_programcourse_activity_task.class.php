@@ -62,12 +62,15 @@ class restore_programcourse_activity_task extends restore_activity_task {
 
     /**
      * Define the decoding rules for links belonging
-     * to the activity to be executed by the link decoder
-     *
-     * @return array
+     * to the programcourse to be executed by the link decoder
      */
-    public static function define_decode_rules(): array {
-        return [];
+    public static function define_decode_rules() {
+        $rules = array();
+    
+        $rules[] = new restore_decode_rule('PROGRAMCOURSEINDEX', '/mod/programcourse/index.php?id=$1', 'course');
+        $rules[] = new restore_decode_rule('PROGRAMCOURSEVIEWBYID', '/mod/programcourse/view.php?id=$1', 'course_module');
+    
+        return $rules;
     }
 
     /**

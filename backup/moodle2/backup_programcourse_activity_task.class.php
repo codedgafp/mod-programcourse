@@ -53,13 +53,13 @@ class backup_programcourse_activity_task extends backup_activity_task {
 
         $base = preg_quote($CFG->wwwroot, "/");
 
-        // Link to the list of pages.
+        //Link to the list of pages.
         $search = "/(" . $base . "\/mod\/programcourse\/index.php\?id\=)([0-9]+)/";
-        $content = preg_replace($search, '$@PAGEINDEX*$2@$', $content);
+        $content = preg_replace($search, '$@PROGRAMCOURSEINDEX*$2@$', $content);
 
         // Link to page view by moduleid.
         $search = "/(" . $base . "\/mod\/programcourse\/view.php\?id\=)([0-9]+)/";
-        $content = preg_replace($search, '$@PAGEVIEWBYID*$2@$', $content);
+        $content = preg_replace($search, '$@PROGRAMCOURSEVIEWBYID*$2@$', $content);
 
         return $content;
     }
