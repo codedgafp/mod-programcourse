@@ -226,7 +226,7 @@ class database_interface {
             INNER JOIN {context} con ON con.instanceid = c.id 
                 AND con.contextlevel = :contextlevel2
             INNER JOIN {context} conrole ON con.path LIKE '%' || '/' || conrole.id || '/%'
-            INNER JOIN {role_assignments} ra ON ra.contextid = conrole.id
+            INNER JOIN {role_assignments} ra ON ra.contextid = con.id
                 AND ra.userid = :userid2
             INNER JOIN {role_capabilities} rc ON rc.roleid = ra.roleid
                 AND rc.permission = 1
