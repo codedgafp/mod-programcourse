@@ -182,72 +182,22 @@ class database_interface {
             ');
         }
 
-        $getsessionsbymainentity = 
-            "SELECT DISTINCT c.id
-                FROM {course} c
-                INNER JOIN {session} s ON s.courseshortname = c.shortname
-                    AND s.status = 'inprogress'
-                INNER JOIN {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
-                    AND ccs_main_entity.name = 'Sessions'
-                    AND ccs_main_entity.visible = 1
-                LEFT JOIN {session_sharing} ss ON ss.sessionid = s.id
-                INNER JOIN {user} u ON u.id = :userid
-                INNER JOIN {user_info_data} uid ON uid.userid = u.id
-                INNER JOIN {user_info_field} uif ON uif.id = uid.fieldid AND uif.shortname = 'mainentity'
-                INNER JOIN {course_categories} ccu_main_entity ON ccu_main_entity.name = uid.data
-                    AND ccu_main_entity.parent = 0
-                INNER JOIN {context} con ON con.instanceid = c.id
-                    AND con.contextlevel = :contextlevel
-                WHERE (
-                    s.opento = :sessionopentoall
-                    or (
-                        s.opento = :sessionopencurrentmainentity
-                        AND ccu_main_entity.id = ccs_main_entity.parent
-                    )
-                    or (
-                        s.opento = :sessionopenotherentity
-                        AND (
-                            ccu_main_entity.id = ccs_main_entity.parent 
-                            OR ccu_main_entity.id = ss.coursecategoryid
-                        )
-                    )
-                )
-            ";
-
-        $getsessionsbyusercapability = 
-            "SELECT DISTINCT c.id
-            FROM {course} c
-            INNER JOIN {session} s ON s.courseshortname = c.shortname 
-                AND s.status = 'inprogress'
-            INNER JOIN {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
-                AND ccs_main_entity.name = 'Sessions' 
-                AND ccs_main_entity.visible = 1
-            LEFT JOIN {session_sharing} ss ON ss.sessionid = s.id
-            INNER JOIN {context} con ON con.instanceid = c.id 
-                AND con.contextlevel = :contextlevel2
-            INNER JOIN {context} conrole ON con.path LIKE '%' || '/' || conrole.id || '/%'
-            INNER JOIN {role_assignments} ra ON ra.contextid = con.id
-                AND ra.userid = :userid2
-            INNER JOIN {role_capabilities} rc ON rc.roleid = ra.roleid
-                AND rc.permission = 1
-            INNER JOIN {capabilities} cap ON cap.name = rc.capability
-                AND cap.name = :capability
-            ";
-
-        $sql = "
-            $getsessionsbymainentity
-            UNION
-            $getsessionsbyusercapability
-        ";
+        $sql = $this->get_sessions_by_user_role_request()
+            . " UNION " .
+            $this->get_others_entities_sessions_request()
+            . " UNION " .
+            $this->get_sessions_by_user_capability_request();
 
         $params = [
-            'userid' => $USER->id,
-            'contextlevel' => CONTEXT_COURSE,
+            'userid1' => $USER->id,
+            'contextlevel1' => CONTEXT_COURSE,
+            'userid2' => $USER->id,
+            'contextlevel2' => CONTEXT_COURSE,
             'sessionopentoall' => session::OPEN_TO_ALL,
             'sessionopencurrentmainentity' => session::OPEN_TO_CURRENT_MAIN_ENTITY,
             'sessionopenotherentity' => session::OPEN_TO_OTHER_ENTITY,
-            'contextlevel2' => CONTEXT_COURSE,
-            'userid2' => $USER->id,
+            'contextlevel3' => CONTEXT_COURSE,
+            'userid3' => $USER->id,
             'capability' => 'moodle/course:manageactivities'
         ];
 
@@ -278,6 +228,84 @@ class database_interface {
                 c.id NOT IN (' . $courseecetpion . ')
             ORDER BY c.fullname
         ');
+    }
+
+    /**
+     * Get all sessions which match with user role context
+     * 
+     * @return string
+     */
+    private function get_sessions_by_user_role_request(): string
+    {
+        return "SELECT DISTINCT c.id
+                FROM {course} c
+                INNER JOIN {session} s ON s.courseshortname = c.shortname
+                    AND s.status = 'inprogress'
+                INNER JOIN {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
+                    AND ccs_main_entity.name = 'Sessions'
+                    AND ccs_main_entity.visible = 1
+                INNER JOIN {role_assignments} ra on ra.userid = :userid1
+                INNER JOIN {context} con ON con.instanceid = c.id
+                    and con.path LIKE '%' || '/' || ra.contextid || '/%'
+                    AND con.contextlevel = :contextlevel1
+                ";
+    }
+
+    /**
+     * Get all the others sessions open to other entity
+     * 
+     * @return string
+     */
+    private function get_others_entities_sessions_request(): string
+    {
+        return "SELECT DISTINCT c.id
+                FROM {course} c
+                INNER JOIN {session} s ON s.courseshortname = c.shortname
+                    AND s.status = 'inprogress'
+                LEFT JOIN {session_sharing} ss ON ss.sessionid = s.id
+                INNER JOIN {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
+                    AND ccs_main_entity.name = 'Sessions'
+                    AND ccs_main_entity.visible = 1
+                INNER JOIN {user} u ON u.id = :userid2
+                INNER JOIN {user_info_data} uid ON uid.userid = u.id
+                INNER JOIN {user_info_field} uif ON uif.id = uid.fieldid AND uif.shortname = 'mainentity'
+                INNER JOIN {course_categories} ccu_main_entity ON ccu_main_entity.name = uid.data
+                    AND ccu_main_entity.parent = 0
+                INNER JOIN {context} con ON con.instanceid = c.id
+                    AND con.contextlevel = :contextlevel2
+                WHERE (
+                    s.opento = :sessionopentoall
+                    or (
+                        s.opento = :sessionopenotherentity
+                        AND ccu_main_entity.id = ss.coursecategoryid
+                    )
+                )";
+    }
+
+    /**
+     * Get all sessions which match with user role context capability
+     * 
+     * @return string
+     */
+    private function get_sessions_by_user_capability_request(): string
+    { 
+        return "SELECT DISTINCT c.id
+                FROM {course} c
+                INNER JOIN {session} s ON s.courseshortname = c.shortname 
+                    AND s.status = 'inprogress'
+                INNER JOIN {course_categories} ccs_main_entity ON ccs_main_entity.id = c.category
+                    AND ccs_main_entity.name = 'Sessions' 
+                    AND ccs_main_entity.visible = 1
+                INNER JOIN {context} con ON con.instanceid = c.id 
+                    AND con.contextlevel = :contextlevel3
+                INNER JOIN {context} conrole ON con.path LIKE '%' || '/' || conrole.id || '/%'
+                INNER JOIN {role_assignments} ra ON ra.contextid = con.id
+                    AND ra.userid = :userid3
+                INNER JOIN {role_capabilities} rc ON rc.roleid = ra.roleid
+                    AND rc.permission = 1
+                INNER JOIN {capabilities} cap ON cap.name = rc.capability
+                    AND cap.name = :capability
+                ";
     }
 
     /**

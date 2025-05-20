@@ -69,7 +69,7 @@ class mod_programcourse_mod_form extends moodleform_mod {
         } else {
             $courseoptions = [0 => 'Aucune option séléctionnée'];
             // Get list of all course not yet in this 'program'.
-            $courses = $dbi->get_available_courses_for_program($course->id);
+            $courses = $dbi->get_available_courses_for_program();
             $columns = array_combine(
                 array_column($courses, 'id'),
                 array_map(function($course) {
