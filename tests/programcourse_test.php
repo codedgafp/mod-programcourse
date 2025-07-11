@@ -23,17 +23,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use core_reportbuilder\external\filters\set;
-
 defined('MOODLE_INTERNAL') || die();
-
-
-
-class programcourse_testcase extends advanced_testcase {
-   /**
+class programcourse_testcase extends advanced_testcase
+{
+    /**
      * Init $CFG
      */
-    public function init_config() {
+    public function init_config()
+    {
         global $CFG;
 
         $CFG->mentor_specializations = [
@@ -42,12 +39,13 @@ class programcourse_testcase extends advanced_testcase {
         ];
     }
 
-        /**
+    /**
      * Reset the singletons
      *
      * @throws ReflectionException
      */
-    public function reset_singletons() {
+    public function reset_singletons()
+    {
         // Reset the mentor core db interface singleton.
         $dbinterface = \local_mentor_core\database_interface::get_instance();
         $reflection = new ReflectionClass($dbinterface);
@@ -67,7 +65,8 @@ class programcourse_testcase extends advanced_testcase {
      * @throws coding_exception
      * @throws moodle_exception
      */
-    public function init_create_user() {
+    public function init_create_user()
+    {
         global $DB;
 
         // Create user.
@@ -104,11 +103,15 @@ class programcourse_testcase extends advanced_testcase {
      * @param null $sessionid
      * @return stdClass
      */
-    public function init_session_data($training = false, $sessionid = null) {
+    public function init_session_data($training = false, $sessionid = null)
+    {
         $data = new stdClass();
 
-        set_config('collections', 'accompagnement|Accompagnement des transitions professionnelles|#CECECE',
-            'local_mentor_specialization');
+        set_config(
+            'collections',
+            'accompagnement|Accompagnement des transitions professionnelles|#CECECE',
+            'local_mentor_specialization'
+        );
 
         if ($training) {
             $data->name = 'Session name';
@@ -182,7 +185,8 @@ class programcourse_testcase extends advanced_testcase {
      * @return training
      * @throws moodle_exception
      */
-    public function init_training_creation() {
+    public function init_training_creation()
+    {
         global $DB;
 
         // Remove the miscelleanous category.
@@ -195,7 +199,7 @@ class programcourse_testcase extends advanced_testcase {
             // Get entity object for default category.
             $entityid = \local_mentor_core\entity_api::create_entity([
                 'name' => 'New Entity 1',
-                'shortname' => 'New Entity 1'                
+                'shortname' => 'New Entity 1'
             ]);
 
             $entity = \local_mentor_core\entity_api::get_entity($entityid);
@@ -222,7 +226,8 @@ class programcourse_testcase extends advanced_testcase {
      * @return int
      * @throws moodle_exception
      */
-    public function init_session_creation() {
+    public function init_session_creation()
+    {
         // Create training.
         $training = $this->init_training_creation();
 
@@ -241,7 +246,8 @@ class programcourse_testcase extends advanced_testcase {
     /**
      * Init training categery by entity id
      */
-    public function init_training_entity($data, $entity) {
+    public function init_training_entity($data, $entity)
+    {
         // Get "Formation" category id (child of entity category).
         $formationid = $entity->get_entity_formation_category();
         $data->categorychildid = $formationid;
@@ -255,7 +261,8 @@ class programcourse_testcase extends advanced_testcase {
     /**
      * Init training category by entity id
      */
-    public function init_session_entity($data, $entity) {
+    public function init_session_entity($data, $entity)
+    {
         // Get "Formation" category id (child of entity category).
         $formationid = $entity->get_entity_formation_category();
         $data->categorychildid = $formationid;
@@ -267,31 +274,30 @@ class programcourse_testcase extends advanced_testcase {
     }
 
 
-     /**
-     * Test construct function ok
-     *
-     
-     */
-    public function test_get_available_courses_for_program() {
+    /**
+    * Test construct function ok
+    *
+
+    */
+    public function test_get_available_courses_for_program()
+    {
 
         global $COURSE, $DB;
 
-        $dbi =  \mod_programcourse\database_interface::get_instance();
+        $dbi = \mod_programcourse\database_interface::get_instance();
         $dbinterface = \local_mentor_specialization\database_interface::get_instance();
         $db = \local_mentor_core\database_interface::get_instance();
 
         $this->resetAfterTest(true);
         $this->reset_singletons();
-        //$DB->delete_records('course_categories');
-        self::setAdminUser();   
-       
+        // $DB->delete_records('course_categories');
+        self::setAdminUser();
 
         // Create session.
         $sessionid = $this->init_session_creation();
         $session = new \local_mentor_core\session($sessionid);
         $sessiontraining = $session->get_training();
 
-       
         // Set category_options 
         $regionId = $dbinterface->get_all_regions()[1]->id;
         $categoryoption = new \stdClass();
@@ -308,57 +314,56 @@ class programcourse_testcase extends advanced_testcase {
         $session->update($session);
         $sessioncourse = $session->get_course();
 
-        
         // Set the global $COURSE variable to the created course
         $COURSE = $sessiontraining->get_course();
-             
-       // Create user
-       $user = new stdClass();
-       $user->lastname = 'lastname';
-       $user->firstname = 'firstname';
-       $user->email = 'test@test.com';
-       $user->username = 'testusername';
-       $user->password = 'to be generated';
-       $user->mnethostid = 1;
-       $user->confirmed = 1;
-       $user->auth = 'manual';
-       $user->profile_field_mainentity = 'New Entity 1';
-       $user->profile_field_secondaryentities = [ 'New Entity 1'];       
-       $userid = local_mentor_core\profile_api::create_user($user);
-       //Set user_info_data
-       $userprofile = \local_mentor_core\profile_api::get_profile($userid);
-       $regionuserfield = $DB->get_record('user_info_field', ['shortname' => 'region']);
-       $regionlist = explode("\n", $regionuserfield->param1);
-       $regionfielddata = new stdClass();
-       $regionfielddata->userid = $userprofile->id;
-       $regionfielddata->fieldid = $regionuserfield->id;
-       $regionfielddata->data = $regionlist[2];
-       $regionfielddata->dataformat = 0;
-       $DB->insert_record('user_info_data', $regionfielddata);
-       $userprofile->sync_entities();
+
+        // Create user
+        $user = new stdClass();
+        $user->lastname = 'lastname';
+        $user->firstname = 'firstname';
+        $user->email = 'test@test.com';
+        $user->username = 'testusername';
+        $user->password = 'to be generated';
+        $user->mnethostid = 1;
+        $user->confirmed = 1;
+        $user->auth = 'manual';
+        $user->profile_field_mainentity = 'New Entity 1';
+        $user->profile_field_secondaryentities = ['New Entity 1'];
+        $userid = local_mentor_core\profile_api::create_user($user);
+        //Set user_info_data
+        $userprofile = \local_mentor_core\profile_api::get_profile($userid);
+        $regionuserfield = $DB->get_record('user_info_field', ['shortname' => 'region']);
+        $regionlist = explode("\n", $regionuserfield->param1);
+        $regionfielddata = new stdClass();
+        $regionfielddata->userid = $userprofile->id;
+        $regionfielddata->fieldid = $regionuserfield->id;
+        $regionfielddata->data = $regionlist[2];
+        $regionfielddata->dataformat = 0;
+        $DB->insert_record('user_info_data', $regionfielddata);
+        $userprofile->sync_entities();
 
         //Asign role formateur && capability 'moodle/course:manageactivities'
         $formateurrole = $db->get_role_by_name('formateur');
-        assign_capability('moodle/course:manageactivities', CAP_ALLOW, $formateurrole->id, $sessiontraining->get_context(),true);
+        assign_capability('moodle/course:manageactivities', CAP_ALLOW, $formateurrole->id, $sessiontraining->get_context(), true);
         role_assign($formateurrole->id, $userid, $sessiontraining->get_context());
 
         //Enrol user to the course as a formateur
         $session->create_self_enrolment_instance();
-        self::getDataGenerator()->enrol_user($user->id, $sessioncourse->id,  \local_mentor_specialization\mentor_profile::ROLE_FORMATEUR);
-    
+        self::getDataGenerator()->enrol_user($user->id, $sessioncourse->id, \local_mentor_specialization\mentor_profile::ROLE_FORMATEUR);
+
         self::setUser($user);
         //Get available courses for a program
         $courseList = $dbi->get_available_courses_for_program($COURSE);
 
-       self::assertCount(1,$courseList);
-       self::assertEquals($sessioncourse->id, array_values($courseList)[0]->id ) ;     
-
+        self::assertCount(1, $courseList);
+        self::assertEquals($sessioncourse->id, array_values($courseList)[0]->id);
     }
 
     /**
      * Test is_programcourse_by_courseid function
      */
-    public function test_is_programcourse_by_courseid() {
+    public function test_is_programcourse_by_courseid()
+    {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -390,4 +395,118 @@ class programcourse_testcase extends advanced_testcase {
         self::assertFalse($isprogramcourse);
     }
 
+    /**
+     * test test_link_course_to_programcourse_is_completed
+     */
+    public function test_link_course_to_programcourse_is_completed() {
+        global $DB;
+        self::setAdminUser();
+        $this->resetAfterTest(true);
+
+        $programcoursegen = $this->getDataGenerator()->get_plugin_generator('mod_programcourse');
+
+        // create course to complete
+        $coursetocomplete = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+        // create activity and link to course to complete
+        $recordmodule = new stdClass();
+        $recordmodule->course = $coursetocomplete;
+        $recordmodule->completion = 2;
+        $recordmodule->completionview = 1;
+        $recordmodule->completionexpected = 0;
+        $recordmodule->completionunlocked = 1;
+        $recordmodule->visible = 1;
+        $foruminstance = $this->getDataGenerator()->create_module('forum', $recordmodule);
+        
+        // create user
+        $participant = $this->getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
+        
+        // create course completion
+        $coursecompletion = new completion_completion(['course' => $coursetocomplete->id, 'userid' => $participant->id]);
+
+        // completed activity
+        $result = core_completion_external::override_activity_completion_status($participant->id, $foruminstance->cmid, COMPLETION_COMPLETE);
+        $result = \external_api::clean_returnvalue(core_completion_external::override_activity_completion_status_returns(), $result);
+        $this->assertEquals($result['state'], COMPLETION_COMPLETE);
+
+        // completed course
+        $coursecompletion->mark_complete();
+        
+        // create course wich contain the programcourse activity
+        $programcoursesession = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
+        // create programcourse and link to his course
+        $programcourse = $programcoursegen->create_instance([
+            'course' => $programcoursesession->id,
+            'courseid' => $coursetocomplete->id,
+            'completion' => 2
+        ]);
+
+        // emulate the "add module" form
+        $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
+        $moduleinfo = new \stdClass();
+        $moduleinfo->id = $programcoursemodule->id;
+        $moduleinfo->modname = 'programcourse';
+        $moduleinfo->instance = $programcourse->id;
+        $moduleinfo->name = $programcourse->name;
+
+        $event = \core\event\course_module_created::create_from_cm($moduleinfo);
+        $event->trigger();
+
+        // test if the completion is create
+        $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
+        $programcoursemodulecompletion = $DB->get_records('course_modules_completion', ['coursemoduleid' => $programcoursemodule->id, 'userid' => $participant->id]);
+        $this->assertCount(1, $programcoursemodulecompletion);
+    }
+
+    /**
+     * test test_link_course_to_programcourse_is_not_completed
+     */
+    public function test_link_course_to_programcourse_is_not_completed() {
+        global $DB;
+        self::setAdminUser();
+        $this->resetAfterTest(true);
+
+        $programcoursegen = $this->getDataGenerator()->get_plugin_generator('mod_programcourse');
+
+        // create course to complete
+        $coursetocomplete = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+        // create activity and link to course to complete
+        $recordmodule = new stdClass();
+        $recordmodule->course = $coursetocomplete;
+        $recordmodule->completion = 2;
+        $recordmodule->completionview = 1;
+        $recordmodule->completionexpected = 0;
+        $recordmodule->completionunlocked = 1;
+        $recordmodule->visible = 1;
+        $this->getDataGenerator()->create_module('forum', $recordmodule);
+        
+        // create user
+        $participant = $this->getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
+
+        // create course wich contain the programcourse activity
+        $programcoursesession = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
+        // create programcourse and link to his course
+        $programcourse = $programcoursegen->create_instance([
+            'course' => $programcoursesession->id,
+            'courseid' => $coursetocomplete->id,
+            'completion' => 2
+        ]);
+
+        // emulate the "add module" form
+        $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
+        $moduleinfo = new \stdClass();
+        $moduleinfo->id = $programcoursemodule->id;
+        $moduleinfo->modname = 'programcourse';
+        $moduleinfo->instance = $programcourse->id;
+        $moduleinfo->name = $programcourse->name;
+
+        $event = \core\event\course_module_created::create_from_cm($moduleinfo);
+        $event->trigger();
+
+        // test if the completion is create
+        $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
+        $programcoursemodulecompletion = $DB->get_records('course_modules_completion', ['coursemoduleid' => $programcoursemodule->id, 'userid' => $participant->id]);
+        $this->assertCount(0, $programcoursemodulecompletion);
+    }
 }

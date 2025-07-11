@@ -466,4 +466,16 @@ class database_interface {
         return !empty($enrolment);
     }
 
+    public function get_programcourse_linked_course_completions($coursemoduleinstance): array
+    {
+        $sql = "SELECT cc.userid
+                FROM {course_completions} cc
+                INNER JOIN {programcourse} pc
+                    ON cc.course = pc.courseid
+                    AND pc.id = :coursemoduleinstance
+                ";
+        $params['coursemoduleinstance'] = $coursemoduleinstance;
+
+        return $this->db->get_records_sql($sql, $params);
+    }
 }

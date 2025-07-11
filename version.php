@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2025022600;
+$plugin->version   = 2025071000;
 $plugin->requires  = 2022112800;
 $plugin->component = 'mod_programcourse';
 $plugin->dependencies = [

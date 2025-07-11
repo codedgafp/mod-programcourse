@@ -30,7 +30,8 @@ require_once("$CFG->libdir/completionlib.php");
  * @author     remi <remi.colet@edunao.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_programcourse_observer {
+class mod_programcourse_observer
+{
     /**
      * Update mod_programcourse if a course link update this fullname.
      *
@@ -38,7 +39,8 @@ class mod_programcourse_observer {
      * @return void
      * @throws Exception
      */
-    public static function mod_programcourse_name_updated(\core\event\course_updated $event): void {
+    public static function mod_programcourse_name_updated(\core\event\course_updated $event): void
+    {
         $updatedfield = $event->other['updatedfields'];
 
         if (!isset($updatedfield['fullname'])) {
@@ -66,7 +68,8 @@ class mod_programcourse_observer {
      * @return void
      * @throws Exception
      */
-    public static function mod_programcourse_completed(\core\event\course_completed $event): void {
+    public static function mod_programcourse_completed(\core\event\course_completed $event): void
+    {
         global $DB;
 
         $coursecompletion = $DB->get_record('course_completions', ['id' => $event->objectid]);
@@ -92,23 +95,35 @@ class mod_programcourse_observer {
      * @param \core\event\course_module_created $event
      * @return void
      */
-    public static function mod_programcourse_cm_created(\core\event\course_module_created $event): void {
+    public static function mod_programcourse_cm_created(\core\event\course_module_created $event): void
+    {
+        global $DB;
+
         // Check module type.
         if ($event->other['modulename'] !== 'programcourse') {
             return;
         }
 
-        $cmid = $event->objectid;
-        $cm = get_coursemodule_from_id('programcourse', $cmid);
+        $coursemoduleid = $event->objectid;
+        $coursemodule = get_coursemodule_from_id('programcourse', $coursemoduleid);
+        $coursemoduleinstance = $coursemodule->instance;
+
         $dbi = \mod_programcourse\database_interface::get_instance();
-        $programcourse = $dbi->get_course_module_by_id($cm->instance);
+        $programcourse = $dbi->get_course_module_by_id($coursemoduleinstance);
+        $programcoursecourse = $DB->get_record('course', ['id' => $programcourse->course]);
+
+        $completioninfo = new completion_info($programcoursecourse);
+        $programcourselinkedcc = $dbi->get_programcourse_linked_course_completions($coursemoduleinstance);
+        foreach ($programcourselinkedcc as $coursecompletion) {
+            $completioninfo->update_state($coursemodule, COMPLETION_UNKNOWN, $coursecompletion->userid);
+        }
 
         if (strpos($programcourse->name, '(copie)') !== false) {
             // Remove (copie) from module name.
             $programcourse->name = trim(str_replace('(copie)', '', $programcourse->name));
             $dbi->update_programcourse_instance($programcourse);
 
-            course_modinfo::purge_course_module_cache($programcourse->course, $cmid);
+            course_modinfo::purge_course_module_cache($programcourse->id, $coursemoduleid);
         }
     }
 }
