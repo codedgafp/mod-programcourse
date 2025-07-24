@@ -26,7 +26,8 @@ require_once($CFG->dirroot . '/course/moodleform_mod.php');
  * @author     Pierre FACQ <pierre.facq@edunao.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_programcourse_mod_form extends moodleform_mod {
+class mod_programcourse_mod_form extends moodleform_mod
+{
     /**
      * Form definition.
      *
@@ -34,7 +35,8 @@ class mod_programcourse_mod_form extends moodleform_mod {
      * @throws coding_exception
      * @throws dml_exception
      */
-    protected function definition(): void {
+    protected function definition(): void
+    {
         $mform = $this->_form;
         $cm = $this->_cm;
         $course = $this->_course;
@@ -72,7 +74,7 @@ class mod_programcourse_mod_form extends moodleform_mod {
             $courses = $dbi->get_available_courses_for_program();
             $columns = array_combine(
                 array_column($courses, 'id'),
-                array_map(function($course) {
+                array_map(function ($course) {
                     return "{$course->fullname} ({$course->id})";
                 }, $courses)
             );
@@ -101,7 +103,8 @@ class mod_programcourse_mod_form extends moodleform_mod {
      *
      * @return string[]
      */
-    public function add_completion_rules(): array {
+    public function add_completion_rules(): array
+    {
         $mform =& $this->_form;
 
         $mform->addElement('advcheckbox', 'completionall', '', get_string('completionall', 'programcourse'));
@@ -119,7 +122,8 @@ class mod_programcourse_mod_form extends moodleform_mod {
      *
      * @param stdClass $data the form data to be modified.
      */
-    public function data_postprocessing($data): void {
+    public function data_postprocessing($data): void
+    {
         parent::data_postprocessing($data);
         if ($data->completion === '2') {
             $data->completionall ??= 0;
@@ -140,7 +144,8 @@ class mod_programcourse_mod_form extends moodleform_mod {
      * @param array $data
      * @return bool
      */
-    public function completion_rule_enabled($data): bool {
+    public function completion_rule_enabled($data): bool
+    {
         return !(empty($data['completionall']));
     }
 
@@ -150,7 +155,8 @@ class mod_programcourse_mod_form extends moodleform_mod {
      * @return void
      * @throws coding_exception
      */
-    public function add_select_picker(): void {
+    public function add_select_picker(): void
+    {
         global $CFG, $PAGE;
 
         $PAGE->requires->css('/mod/programcourse/css/bootstrap-select.min.css');
@@ -174,7 +180,8 @@ class mod_programcourse_mod_form extends moodleform_mod {
      * @return array
      * @throws coding_exception
      */
-    public function validation($data, $files) {
+    public function validation($data, $files)
+    {
         $errors = parent::validation($data, $files);
 
         if ($data['courseid'] == 0) {
@@ -192,11 +199,11 @@ class mod_programcourse_mod_form extends moodleform_mod {
      *
      * @param array $default_values passed by reference
      */
-    function data_preprocessing(&$default_values){
+    public function data_preprocessing(&$default_values)
+    {
         //Set default completion tracking to automatic
-        if (isset($default_values['completion'])) {
+        if ((isset($default_values['id']) && $default_values['id'] === '') && isset($default_values['completion'])) {
             $default_values['completion'] = COMPLETION_TRACKING_AUTOMATIC;
-        }       
-        
+        }
     }
 }
