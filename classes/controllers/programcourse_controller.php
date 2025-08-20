@@ -46,6 +46,10 @@ class programcourse_controller extends controller_base {
         global $SESSION;
 
         $currentCourseId = $this->get_param('currentCourseId', PARAM_INT,null);
+        
+        if(!isset($SESSION->program[$currentCourseId])) { 
+            return $this->success( ['message' => false, 'redirectid' => null] );
+        }
         $programCourseId = $SESSION->program[$currentCourseId]["courseid"];
 
         if($currentCourseId != null ){
