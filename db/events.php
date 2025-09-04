@@ -38,4 +38,8 @@ $observers = [
         'eventname' => '\core\event\course_module_created',
         'callback' => 'mod_programcourse_observer::mod_programcourse_cm_created',
     ],
+    [
+        'eventname' => '\mod_programcourse\event\programcourse_users_enrolled',
+        'callback' => 'mod_programcourse_observer::mod_programcourse_update_completions',
+    ],
 ];

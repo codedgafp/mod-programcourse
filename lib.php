@@ -46,7 +46,11 @@ function programcourse_add_instance($programcourse, $mform = null) {
     $programcourse->id = $dbi->add_programcourse_instance($programcourse);
 
     $enrol = enrol_get_plugin('program');
-    $enrol->add_instance($course, ['customint1' => $programcourse->course]);
+    $enrol->add_instance($course, [
+        'customint1' => $programcourse->course,
+        'programcoursecoursemodule' => $programcourse->coursemodule,
+        'programcourseid' => $programcourse->id
+    ]);
 
     return $programcourse->id;
 }

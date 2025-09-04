@@ -110,13 +110,6 @@ class mod_programcourse_observer
 
         $dbi = \mod_programcourse\database_interface::get_instance();
         $programcourse = $dbi->get_course_module_by_id($coursemoduleinstance);
-        $programcoursecourse = $DB->get_record('course', ['id' => $programcourse->course]);
-
-        $completioninfo = new completion_info($programcoursecourse);
-        $programcourselinkedcc = $dbi->get_programcourse_linked_course_completions($coursemoduleinstance);
-        foreach ($programcourselinkedcc as $coursecompletion) {
-            $completioninfo->update_state($coursemodule, COMPLETION_UNKNOWN, $coursecompletion->userid);
-        }
 
         if (strpos($programcourse->name, '(copie)') !== false) {
             // Remove (copie) from module name.
@@ -124,6 +117,28 @@ class mod_programcourse_observer
             $dbi->update_programcourse_instance($programcourse);
 
             course_modinfo::purge_course_module_cache($programcourse->id, $coursemoduleid);
+        }
+    }
+
+    /**
+     * Update completion for each programcourse enrolled users 
+     *
+     * @param \mod_programcourse\event\programcourse_users_enrolled $event
+     * @return void
+     */
+    public static function mod_programcourse_update_completions(\mod_programcourse\event\programcourse_users_enrolled $event): void
+    {
+        global $DB;
+    
+        $coursemodule = get_coursemodule_from_id('programcourse', $event->other['coursemodule']);
+
+        $dbi = \mod_programcourse\database_interface::get_instance();
+        $programcoursecourse = $DB->get_record('course', ['id' => $event->other['programcoursecourseid']]);
+
+        $completioninfo = new completion_info($programcoursecourse);
+        $programcourselinkedcoursecompletions = $dbi->get_programcourse_linked_course_completions($event->other['programcourseid']);
+        foreach ($programcourselinkedcoursecompletions as $coursecompletion) {
+            $completioninfo->update_state($coursemodule, COMPLETION_UNKNOWN, $coursecompletion->userid);
         }
     }
 }
