@@ -181,13 +181,7 @@ class database_interface {
                 WHERE c.status  = 1
             ');
         }
-
-        $sql = $this->get_sessions_by_user_role_request()
-            . " UNION " .
-            $this->get_others_entities_sessions_request()
-            . " UNION " .
-            $this->get_sessions_by_user_capability_request();
-
+        
         $params = [
             'userid1' => $USER->id,
             'contextlevel1' => CONTEXT_COURSE,
@@ -201,15 +195,22 @@ class database_interface {
             'capability' => 'moodle/course:manageactivities'
         ];
 
-        // Get course when user is formateur.
-        $availablecourses = $this->db->get_records_sql($sql, $params);
+        $sessionsbyuserrolerequest = $this->db->get_records_sql($this->get_sessions_by_user_role_request(), $params);
+        $othersentitiessessionsrequest = $this->db->get_records_sql($this->get_others_entities_sessions_request(), $params);
+        $sessionsbyusercapabilityrequest = $this->db->get_records_sql($this->get_sessions_by_user_capability_request(), $params);
+
+        $availablecourses = array_unique(array_merge(
+            !empty($sessionsbyuserrolerequest) ? array_column($sessionsbyuserrolerequest, 'id') : [],
+            !empty($othersentitiessessionsrequest) ? array_column($othersentitiessessionsrequest, 'id') : [],
+            !empty($sessionsbyusercapabilityrequest) ? array_column($sessionsbyusercapabilityrequest, 'id') : []
+        ));
 
         // Ignore self course.
         $courseecetpion[] = $COURSE->id;
 
         $possiblecoursemerge = array_merge(
             array_column($coursetocatalog, 'id'),
-            array_column($availablecourses, 'id')
+            $availablecourses
         );
 
         if (empty($possiblecoursemerge)) {
