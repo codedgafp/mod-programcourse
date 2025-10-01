@@ -125,7 +125,7 @@ class mod_programcourse_mod_form extends moodleform_mod
     public function data_postprocessing($data): void
     {
         parent::data_postprocessing($data);
-        if ($data->completion === '2') {
+        if ($data->completion == '2') {
             $data->completionall ??= 0;
         } else {
             $data->completionall = 0;
