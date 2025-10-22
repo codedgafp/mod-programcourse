@@ -44,6 +44,7 @@ $cm = get_coursemodule_from_id('programcourse', $cmid, 0, true, MUST_EXIST);
 $userid = $USER->id;
 $course = get_course($cm->course);
 $dbi = \mod_programcourse\database_interface::get_instance();
+$enrolprogramdbi = \enrol_program\database_interface::get_instance();
 
 if ($course === false) {
     throw new \moodle_exception('coursemisconf');
@@ -83,7 +84,8 @@ if (!is_enrolled(context_course::instance($courseidlink), $userid)) {
         $enrolinstance = $dbi->get_enrol_instance_by_id($enrolid);
     }
 
-    $enrol->enrol_user($enrolinstance, $userid);
+    $roleparticipant = $enrolprogramdbi->get_role_by_shortname('participant');
+    $enrol->enrol_user($enrolinstance, $userid, $roleparticipant->id);
 }
 
 // Set user program data to user session.
