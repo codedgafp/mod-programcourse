@@ -26,39 +26,40 @@
 namespace mod_programcourse;
 
 use mod_programcourse\controller_base;
-require_once($CFG->dirroot . '/mod/programcourse/api/programcourse.php');
 
 defined('MOODLE_INTERNAL') || die();
 
-
+require_once($CFG->dirroot . '/mod/programcourse/api/programcourse.php');
 require_once($CFG->dirroot . '/mod/programcourse/classes/controllers/controller_base.php');
 
-class programcourse_controller extends controller_base {
-
+class programcourse_controller extends controller_base
+{
     /**
      * Check if the user is eligible for the program course
      * 
-     * @param int $currentCourseId
-     * @param int|null $previouscourseId
      * @throws \moodle_exception
      */
-   public function get_eligibility_for_programcourse() {
-        global $SESSION;
+    public function get_eligibility_for_programcourse()
+    {
+        global $SESSION, $DB;
 
-        $currentCourseId = $this->get_param('currentCourseId', PARAM_INT,null);
-        
-        if(!isset($SESSION->program[$currentCourseId])) { 
-            return $this->success( ['message' => false, 'redirectid' => null] );
-        }
-        $programCourseId = $SESSION->program[$currentCourseId]["courseid"];
+        $currentid = $this->get_param('currentId', PARAM_INT);
+        $currentCourseIsSection = $this->get_param('currentCourseIsSection', PARAM_BOOL);
 
-        if($currentCourseId != null ){
-            $isEligible = programcourse_api::is_programcourse_by_courseid($currentCourseId);
+        $courseid = $currentCourseIsSection == 'true' ? $DB->get_field('course_sections', 'course', ['id' => $currentid]) : $currentid;
+
+        if (!isset($SESSION->program[$courseid]))
+            return $this->success(['message' => false, 'redirectid' => null]);
+
+        $programCourseId = $SESSION->program[$courseid]["courseid"];
+
+        if ($courseid != null) {
+            $isEligible = programcourse_api::is_programcourse_by_courseid($courseid);
             $returnId = $isEligible ? $programCourseId : null;
-            return $this->success( ['message' => $isEligible,'redirectid' => $returnId] );
-        }else {
+            return $this->success(['message' => $isEligible, 'redirectid' => $returnId]);
+        } else {
             throw new \moodle_exception('invalidparams', 'Invalid params');
-        }      
+        }
     }
-    
+
 }
