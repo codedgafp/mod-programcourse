@@ -169,6 +169,8 @@ class database_interface {
     public function get_available_courses_for_program(): array {
         global $USER, $COURSE, $CFG;
 
+        $userid = $USER->id;
+
         // Specific Magistère.
         $coursetocatalog = [];
         if (file_exists($CFG->dirroot . '/local/catalogue_manager/lib.php')) {
@@ -183,15 +185,15 @@ class database_interface {
         }
         
         $params = [
-            'userid1' => $USER->id,
+            'userid1' => $userid,
             'contextlevel1' => CONTEXT_COURSE,
-            'userid2' => $USER->id,
+            'userid2' => $userid,
             'contextlevel2' => CONTEXT_COURSE,
             'sessionopentoall' => session::OPEN_TO_ALL,
             'sessionopencurrentmainentity' => session::OPEN_TO_CURRENT_MAIN_ENTITY,
             'sessionopenotherentity' => session::OPEN_TO_OTHER_ENTITY,
             'contextlevel3' => CONTEXT_COURSE,
-            'userid3' => $USER->id,
+            'userid3' => $userid,
             'capability' => 'moodle/course:manageactivities'
         ];
 
@@ -199,10 +201,17 @@ class database_interface {
         $othersentitiessessionsrequest = $this->db->get_records_sql($this->get_others_entities_sessions_request(), $params);
         $sessionsbyusercapabilityrequest = $this->db->get_records_sql($this->get_sessions_by_user_capability_request(), $params);
 
+        $sessionsbyusercapability = array_filter($sessionsbyusercapabilityrequest, function($session) use ($userid) {
+            $context = \context_course::instance($session->id);
+            if (has_capability('moodle/course:manageactivities', $context, $userid)) {
+                return $session;
+            }
+        });
+
         $availablecourses = array_unique(array_merge(
             !empty($sessionsbyuserrolerequest) ? array_column($sessionsbyuserrolerequest, 'id') : [],
             !empty($othersentitiessessionsrequest) ? array_column($othersentitiessessionsrequest, 'id') : [],
-            !empty($sessionsbyusercapabilityrequest) ? array_column($sessionsbyusercapabilityrequest, 'id') : []
+            !empty($sessionsbyusercapability) ? array_column($sessionsbyusercapability, 'id') : []
         ));
 
         // Ignore self course.
@@ -288,6 +297,7 @@ class database_interface {
      * 
      * @return string
      */
+    // program course problem
     private function get_sessions_by_user_capability_request(): string
     { 
         return "SELECT DISTINCT c.id
@@ -299,7 +309,6 @@ class database_interface {
                     AND ccs_main_entity.visible = 1
                 INNER JOIN {context} con ON con.instanceid = c.id 
                     AND con.contextlevel = :contextlevel3
-                INNER JOIN {context} conrole ON con.path LIKE '%' || '/' || conrole.id || '/%'
                 INNER JOIN {role_assignments} ra ON ra.contextid = con.id
                     AND ra.userid = :userid3
                 INNER JOIN {role_capabilities} rc ON rc.roleid = ra.roleid
