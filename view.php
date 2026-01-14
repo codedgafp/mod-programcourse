@@ -52,6 +52,9 @@ if ($course === false) {
 
 require_login($course, true, $cm);
 
+$context = context_module::instance($cm->id);
+programcourse_view($cmid, $context);
+
 // Get programcourse.
 $programcourse = $dbi->get_course_module_by_id($cm->instance);
 

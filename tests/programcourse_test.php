@@ -480,7 +480,7 @@ class programcourse_testcase extends advanced_testcase
         $recordmodule->completionunlocked = 1;
         $recordmodule->visible = 1;
         $this->getDataGenerator()->create_module('forum', $recordmodule);
-        
+
         // create user
         $participant = $this->getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
 
@@ -508,5 +508,45 @@ class programcourse_testcase extends advanced_testcase
         $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
         $programcoursemodulecompletion = $DB->get_records('course_modules_completion', ['coursemoduleid' => $programcoursemodule->id, 'userid' => $participant->id]);
         $this->assertCount(0, $programcoursemodulecompletion);
+    }
+
+    public function test_programcourse_viewed_event(): void
+    {
+        self::setAdminUser();
+        $this->resetAfterTest(true);
+
+        $course = self::getDataGenerator()->create_course();
+        $coursetocomplete = $this->getDataGenerator()->create_course();
+
+        $recordmodule = new \stdClass();
+        $recordmodule->course = $course->id;
+        $recordmodule->courseid = $coursetocomplete->id;
+        $recordmodule->name = "Program course test";
+        $recordmodule->intro = null;
+        $recordmodule->introformat = 1;
+        $recordmodule->completionall = 1;
+        $recordmodule->timemodified = new DateTime();
+        $recordmodule->hiddenintro = null;
+        $programcourse = $this->getDataGenerator()->create_module('programcourse', $recordmodule);
+
+        $cm = get_coursemodule_from_id('programcourse', $programcourse->cmid, 0, true, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+
+        $params = [
+            'context' => $context,
+            'objectid' => $programcourse->id
+        ];
+
+        $event = \mod_programcourse\event\programcourse_viewed::create($params);
+        $event->trigger();
+
+        $this->assertEquals('\mod_programcourse\event\programcourse_viewed', $event->eventname);
+        $this->assertEquals('mod_programcourse', $event->component);
+        $this->assertEquals('viewed', $event->action);
+        $this->assertEquals('programcourse', $event->target);
+        $this->assertEquals($programcourse->id, $event->objectid);
+        $this->assertEquals('r', $event->crud);
+        $this->assertEquals($context->id, $event->contextid);
+        $this->assertEquals($course->id, $event->courseid);
     }
 }

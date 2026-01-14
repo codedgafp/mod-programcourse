@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use core\context\module;
+
 /**
  * Add a programcourse instance.
  *
@@ -347,4 +349,22 @@ function mod_programcourse_extend_navigation_course() {
         'return_parcours'
     ], 'mod_programcourse');
     $PAGE->requires->js_call_amd('mod_programcourse/return_button_programcourse', 'init');
+}
+
+/**
+ * Trigger the programcourse_viewed event.
+ * 
+ * @param int $programcourseid
+ * @param module|false $context
+ * @return void
+ */
+function programcourse_view(int $programcourseid, module|false $context): void
+{
+    $params = [
+        'context' => $context,
+        'objectid' => $programcourseid
+    ];
+
+    $event = \mod_programcourse\event\programcourse_viewed::create($params);
+    $event->trigger();
 }
