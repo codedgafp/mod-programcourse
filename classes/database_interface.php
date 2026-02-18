@@ -380,10 +380,11 @@ class database_interface {
      * @return void
      * @throws \dml_exception
      */
-    public function update_module_instance_name(int $instanceid, string $instancename): void {
+    public function update_module_instance_name(\stdClass $module, string $instancename): void {
         $instancedata = new \stdClass();
-        $instancedata->id = $instanceid;
+        $instancedata->id = $module->instance;
         $instancedata->name = $instancename;
+        $instancedata->intro = $module->intro;
         $instancedata->timemodified = time();
 
         $this->db->update_record(self::DEFAULT_MODULE_NAME, $instancedata);

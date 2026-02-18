@@ -115,7 +115,6 @@ function programcourse_update_instance($module) {
         $programcourse->name = $course->fullname;
         $programcourse->intro = $module->intro;
 
-        $site = get_site();
         $programcourse->hiddenintro = $programcourse->intro;
 
         $programcourse->timemodified = time();
@@ -128,15 +127,19 @@ function programcourse_update_instance($module) {
     } else {
         $course = $dbi->get_course_link_to_programcourse($module->instance);
 
-        $dbi->update_module_instance_name($module->instance, $course->fullname);
+        $dbi->update_module_instance_name($module, $course->fullname);
 
         if (isset($module->completionall) && $olddata->completionall !== $module->completionall) {
             $dbi->update_completion_config($module->instance, $module->completionall);
         }
 
         $completiontimeexpected = !empty($module->completionexpected) ? $module->completionexpected : null;
-        \core_completion\api::update_completion_date_event($module->coursemodule, 'programcourse', $module->instance,
-            $completiontimeexpected);
+        \core_completion\api::update_completion_date_event(
+            $module->coursemodule,
+            'programcourse',
+            $module->instance,
+            $completiontimeexpected
+        );
     }
 
     return true;
