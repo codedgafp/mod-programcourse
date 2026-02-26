@@ -482,8 +482,13 @@ class database_interface {
         $sql = "SELECT cc.userid
                 FROM {course_completions} cc
                 INNER JOIN {programcourse} pc
-                    ON cc.course = pc.courseid
-                    AND pc.id = :coursemoduleinstance
+                    ON pc.id = :coursemoduleinstance
+                    AND pc.courseid = cc.course
+                INNER JOIN {enrol} e
+                    ON e.courseid = pc.course
+                INNER JOIN {user_enrolments} ue
+                    ON ue.enrolid = e.id
+                WHERE cc.userid = ue.userid
                 ";
         $params['coursemoduleinstance'] = $coursemoduleinstance;
 

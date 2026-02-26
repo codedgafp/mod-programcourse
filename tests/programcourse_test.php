@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -24,6 +25,9 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+
+use core_external\external_api;
+
 class programcourse_testcase extends advanced_testcase
 {
     /**
@@ -99,11 +103,12 @@ class programcourse_testcase extends advanced_testcase
     /**
      * Initialization of the session or trainig data
      *
-     * @param false $training
-     * @param null $sessionid
+     * @param bool $training
+     * @param int $sessionid
      * @return stdClass
      */
-    public function init_session_data($training = false, $sessionid = null)
+
+    public function init_session_data(bool $training = false, int $sessionid = null)
     {
         $data = new stdClass();
 
@@ -182,7 +187,7 @@ class programcourse_testcase extends advanced_testcase
     /**
      * Init training creation
      *
-     * @return training
+     * @return \local_mentor_core\training
      * @throws moodle_exception
      */
     public function init_training_creation()
@@ -398,7 +403,8 @@ class programcourse_testcase extends advanced_testcase
     /**
      * test test_link_course_to_programcourse_is_completed
      */
-    public function test_link_course_to_programcourse_is_completed() {
+    public function test_link_course_to_programcourse_user_not_enrol()
+    {
         global $DB;
         self::setAdminUser();
         $this->resetAfterTest(true);
@@ -417,23 +423,24 @@ class programcourse_testcase extends advanced_testcase
         $recordmodule->completionunlocked = 1;
         $recordmodule->visible = 1;
         $foruminstance = $this->getDataGenerator()->create_module('forum', $recordmodule);
-        
+
         // create user
         $participant = $this->getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
-        
+
         // create course completion
         $coursecompletion = new completion_completion(['course' => $coursetocomplete->id, 'userid' => $participant->id]);
 
         // completed activity
         $result = core_completion_external::override_activity_completion_status($participant->id, $foruminstance->cmid, COMPLETION_COMPLETE);
-        $result = \external_api::clean_returnvalue(core_completion_external::override_activity_completion_status_returns(), $result);
+        $result = external_api::clean_returnvalue(core_completion_external::override_activity_completion_status_returns(), $result);
         $this->assertEquals($result['state'], COMPLETION_COMPLETE);
 
         // completed course
         $coursecompletion->mark_complete();
-        
+
         // create course wich contain the programcourse activity
         $programcoursesession = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
+
         // create programcourse and link to his course
         $programcourse = $programcoursegen->create_instance([
             'course' => $programcoursesession->id,
@@ -452,16 +459,89 @@ class programcourse_testcase extends advanced_testcase
         $event = \core\event\course_module_created::create_from_cm($moduleinfo);
         $event->trigger();
 
-        // test if the completion is create
+        $this->runAdhocTasks();
+
         $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
         $programcoursemodulecompletion = $DB->get_records('course_modules_completion', ['coursemoduleid' => $programcoursemodule->id, 'userid' => $participant->id]);
+
+        $this->assertCount(0, $programcoursemodulecompletion);
+    }
+
+    
+    /**
+     * test test_link_course_to_programcourse_is_completed
+     */
+    public function test_link_course_to_programcourse_user_is_enrol()
+    {
+        global $DB;
+        self::setAdminUser();
+        $this->resetAfterTest(true);
+
+        $programcoursegen = $this->getDataGenerator()->get_plugin_generator('mod_programcourse');
+
+        // create course to complete
+        $coursetocomplete = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+        // create activity and link to course to complete
+        $recordmodule = new stdClass();
+        $recordmodule->course = $coursetocomplete;
+        $recordmodule->completion = 2;
+        $recordmodule->completionview = 1;
+        $recordmodule->completionexpected = 0;
+        $recordmodule->completionunlocked = 1;
+        $recordmodule->visible = 1;
+        $foruminstance = $this->getDataGenerator()->create_module('forum', $recordmodule);
+
+        // create user
+        $participant = $this->getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
+
+        // create course completion
+        $coursecompletion = new completion_completion(['course' => $coursetocomplete->id, 'userid' => $participant->id]);
+
+        // completed activity
+        $result = core_completion_external::override_activity_completion_status($participant->id, $foruminstance->cmid, COMPLETION_COMPLETE);
+        $result = external_api::clean_returnvalue(core_completion_external::override_activity_completion_status_returns(), $result);
+        $this->assertEquals($result['state'], COMPLETION_COMPLETE);
+
+        // completed course
+        $coursecompletion->mark_complete();
+
+        // create course wich contain the programcourse activity
+        $programcoursesession = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+        $this->getDataGenerator()->enrol_user($participant->id, courseid: $programcoursesession->id);
+
+        // create programcourse and link to his course
+        $programcourse = $programcoursegen->create_instance([
+            'course' => $programcoursesession->id,
+            'courseid' => $coursetocomplete->id,
+            'completion' => 2
+        ]);
+
+        // emulate the "add module" form
+        $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
+        $moduleinfo = new \stdClass();
+        $moduleinfo->id = $programcoursemodule->id;
+        $moduleinfo->modname = 'programcourse';
+        $moduleinfo->instance = $programcourse->id;
+        $moduleinfo->name = $programcourse->name;
+
+        $event = \core\event\course_module_created::create_from_cm($moduleinfo);
+        $event->trigger();
+
+        $this->runAdhocTasks();
+
+        $programcoursemodule = $DB->get_record('course_modules', ['course' => $programcoursesession->id, 'instance' => $programcourse->id]);
+        $programcoursemodulecompletion = $DB->get_records('course_modules_completion', ['coursemoduleid' => $programcoursemodule->id, 'userid' => $participant->id]);
+
         $this->assertCount(1, $programcoursemodulecompletion);
     }
 
     /**
      * test test_link_course_to_programcourse_is_not_completed
      */
-    public function test_link_course_to_programcourse_is_not_completed() {
+    public function test_link_course_to_programcourse_is_not_completed()
+    {
         global $DB;
         self::setAdminUser();
         $this->resetAfterTest(true);
