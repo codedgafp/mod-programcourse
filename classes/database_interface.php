@@ -476,22 +476,4 @@ class database_interface {
         ', ['userid' => $userid, 'courseid' => $currentCourseId, 'enrolmethod' => 'program', 'programcourseid' => $previouscourseId]);
         return !empty($enrolment);
     }
-
-    public function get_programcourse_linked_course_completions($coursemoduleinstance): array
-    {
-        $sql = "SELECT cc.userid
-                FROM {course_completions} cc
-                INNER JOIN {programcourse} pc
-                    ON pc.id = :coursemoduleinstance
-                    AND pc.courseid = cc.course
-                INNER JOIN {enrol} e
-                    ON e.courseid = pc.course
-                INNER JOIN {user_enrolments} ue
-                    ON ue.enrolid = e.id
-                WHERE cc.userid = ue.userid
-                ";
-        $params['coursemoduleinstance'] = $coursemoduleinstance;
-
-        return $this->db->get_records_sql($sql, $params);
-    }
 }

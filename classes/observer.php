@@ -119,26 +119,4 @@ class mod_programcourse_observer
             course_modinfo::purge_course_module_cache($programcourse->id, $coursemoduleid);
         }
     }
-
-    /**
-     * Update completion for each programcourse enrolled users 
-     *
-     * @param \mod_programcourse\event\programcourse_users_enrolled $event
-     * @return void
-     */
-    public static function mod_programcourse_update_completions(\mod_programcourse\event\programcourse_users_enrolled $event): void
-    {
-        global $DB;
-    
-        $coursemodule = get_coursemodule_from_id('programcourse', $event->other['coursemodule']);
-
-        $dbi = \mod_programcourse\database_interface::get_instance();
-        $programcoursecourse = $DB->get_record('course', ['id' => $event->other['programcoursecourseid']]);
-
-        $completioninfo = new completion_info($programcoursecourse);
-        $programcourselinkedcoursecompletions = $dbi->get_programcourse_linked_course_completions($event->other['programcourseid']);
-        foreach ($programcourselinkedcoursecompletions as $coursecompletion) {
-            $completioninfo->update_state($coursemodule, COMPLETION_UNKNOWN, $coursecompletion->userid);
-        }
-    }
 }
