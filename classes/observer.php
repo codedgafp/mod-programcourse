@@ -74,13 +74,24 @@ class mod_programcourse_observer
 
         $coursecompletion = $DB->get_record('course_completions', ['id' => $event->objectid]);
         $courseid = $coursecompletion->course;
-        $dbi = \mod_programcourse\database_interface::get_instance();
-        $coursemoduleinstances = $dbi->get_course_modules_by_course_id($courseid);
+        $dbimodprogram = \mod_programcourse\database_interface::get_instance();
+        $coursemoduleinstances = $dbimodprogram->get_course_modules_by_course_id($courseid);
+
+        $dbienrolprogram = \enrol_program\database_interface::get_instance();
+
         foreach ($coursemoduleinstances as $coursemoduleinstance) {
+            $programcourse = $DB->get_record('programcourse', ["id" => $coursemoduleinstance->instance]);
+            $programcourselinkedcoursecompletions = $dbienrolprogram->get_programcourse_link_course_completion_by_userid($programcourse->course, $programcourse->courseid, $event->relateduserid);
+
+            if (!$programcourselinkedcoursecompletions) {
+                continue;
+            }
+
             list($course, $cm) = get_course_and_cm_from_cmid($coursemoduleinstance->id);
 
             // Set up completion object and check it is enabled.
             $completion = new completion_info($course);
+
             if (!$completion->is_enabled()) {
                 continue;
             }
